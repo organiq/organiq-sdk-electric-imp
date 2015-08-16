@@ -33,7 +33,7 @@ class Organiq {
 
     }
 
-    function sendSuccessRespnose(req, res) {
+    function sendSuccessResponse(req, res) {
         local response = { reqid=req.reqid, success=true, res=res };
         agent.send("RESPONSE", response)
     }
@@ -58,8 +58,8 @@ class Organiq {
 
     function set(req) {
         try {
-            server.log("[organiq] SET " + req.property + "=" + req.value);
-            local f = device.properties[req.property][1];
+            server.log("[organiq] SET " + req.identifier + "=" + req.value);
+            local f = device.properties[req.identifier][1];
             f(req.value.tointeger());
             sendSuccessResponse(req, true);
         } catch(ex) {
