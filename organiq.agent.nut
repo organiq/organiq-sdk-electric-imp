@@ -1,66 +1,91 @@
-server.log("Turn LED Off: " + http.agenturl() + "?method=SET&identifier=ledState&value=0");
-server.log("Turn LED On: " + http.agenturl() + "?method=SET&identifier=ledState&value=1");
+class Organiq {
+    _reqid = 0;
+    _requests = {};
 
-reqid <- 0;
-requests <- {};
-function requestHandler(request, response) {
-    server.log("requestHandler: " + request.query)
-    try {
-        local method = request.query.method;
-        local identifier = request.query.identifier;
-        local value = request.query.value[0];
+    static version = [0, 1, 0];
+    static validRequestMethods = ["GET", "SET", "INVOKE"];
 
-        server.log(" method: " + method);
-        server.log(" identifier: " + identifier);
-        server.log(" value: " + value);
+    _apiRoot = "http://api.organiq.io/";
+    _apiKeyId = "";
+    _apiKeySecret = "";
+    _namespace = ".";
+    _nextRequestHandler = null;
 
-        reqid += 1;
-        local req = { reqid=reqid, method=method, identifier=identifier, value=value };
-        requests[reqid] <- [ req, response ];
-        device.send(method, req);
+    constructor(options = {}) {
+        if ("apiRoot" in options) { _apiRoot = options.apiRoot; }
+        if ("apiKeyId" in options) { _apiKeyId = options.apiKeyId; }
+        if ("apiKeySecret" in options) { _apiKeySecret = options.apiKeySecret; }
+        if ("namespace" in options) { _namespace = options.namespace; }
+        if ("nextRequestHandler" in options) { _nextRequestHandler = options.nextRequestHandler; }
 
-    } catch(ex) {
-        response.send(500, "Internal Server Error: " + ex);
+        http.onrequest(requestHandler.bindenv(this));
+        device.on("__organiq_REGISTER", register.bindenv(this));
+        device.on("__organiq_RESPONSE", responseHandler.bindenv(this));
+    }
+
+    function requestHandler(request, response) {
+        server.log("path: " + request.path)
+        if (request.path != "/organiq") {
+            if (_nextRequestHandler != null) {
+                return _nextRequestHandler(request, response);
+            } else {
+                return response.send(404, "Not Found");
+            }
+        }
+
+        try {
+            local method = request.query.method;
+            local identifier = request.query.identifier;
+            local value = ("value" in request.query) ? request.query.value[0] : null;
+
+            server.log("Organiq Request Handler");
+            server.log(" method: " + method);
+            server.log(" identifier: " + identifier);
+            server.log(" value: " + value);
+
+            _reqid += 1;
+            local req = { reqid=_reqid, method=method,
+                          identifier=identifier, value=value };
+            _requests[_reqid] <- [req, response];
+            device.send("__organiq_" + method, req);
+        } catch(ex) {
+            response.send(500, "Internal Server Error: " + ex);
+        }
+    }
+
+    function responseHandler(res) {
+        local context = delete _requests[res.reqid];
+        if (!context) {
+            server.log("Response for unknown request (timed out?): " + res.reqid);
+        }
+        local req = context[0];
+        local response = context[1];
+
+        if (res.success) {
+            response.send(200, res.res);
+        } else {
+            response.send(500, res.err);
+        }
+    }
+
+    function register(deviceid) {
+        #local myDevId = imp.configparams.deviceid;
+        local callback = http.agenturl() + "/organiq";
+        local url = _apiRoot + "!/register?deviceid=" + deviceid + "&callback=" + callback;
+        local headers = "";
+
+        server.log("Registering device: '" + deviceid + "' at callback " + callback);
+
+        local request = http.get(url);
+        local response = request.sendsync();
+
+        server.log("Got status: " + response.statuscode)
     }
 }
 
-function responseHandler(res) {
-    local context = delete requests[reqid];
-    local req = context[0];
-    local response = context[1];
+// function requestHandler(request, response) {
+//     // any requests you want to handle in agent code here...
+// }
 
-    if (!req) {
-        server.log("Response for unknown request: " + res.reqid);
-        return;
-    }
-    if (res.success) {
-        response.send(200, res.res);
-    } else {
-        response.send(500, res.err);
-    }
+// organiq <- Organiq({nextRequestHandler=requestHandler})
 
-}
-
-device.on("RESPONSE", responseHandler);
-
-function HttpPostWrapper (url, headers, string) {
-  local request = http.post(url, headers, string);
-  local response = request.sendsync();
-  return response;
-}
-
-
-function register(req) {
-    server.log("Registering device: " + req)
-    local myDevId = imp.configparams.deviceid;
-    local url = "http://api.organiq.io/!/register?deviceid=" + myDevId + "&callback=" + http.agenturl();
-    local headers = "";
-
-    local request = http.get(url);
-    local response = request.sendsync();
-
-    server.log("Got status: " + response.statuscode)
-}
-device.on("REGISTER", register);
-
-http.onrequest(requestHandler);
