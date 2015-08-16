@@ -3,8 +3,8 @@ class Organiq {
     deviceid = null;
     device = null;
 
-    constructor(deviceid_, device_) {
-        deviceid = deviceid_;
+    constructor(device_) {
+        deviceid = hardware.getdeviceid();
         device = device_;
     }
 
@@ -33,22 +33,50 @@ class Organiq {
 
     }
 
+    function sendSuccessRespnose(req, res) {
+        local response = { reqid=req.reqid, success=true, res=res };
+        agent.send("RESPONSE", response)
+    }
+
+    function sendErrorResponse(req, err) {
+        local response = { reqid=req.reqid, success=false, err=err };
+        agent.send("RESPONSE", response)
+    }
+
+
     function get(req) {
-        server.log("[organiq] GET " + req.property);
-        local f = device.properties[req.property][0];
-        local result = f();
-        server.log("  result: " + result);
+        try {
+            server.log("[organiq] GET " + req.identifier);
+            local f = device.properties[req.identifier][0];
+            local res = f();
+            server.log("  result: " + res);
+            sendSuccessResponse(req, res);
+        } catch(ex) {
+            sendErrorResponse(req, ex);
+        }
     }
 
     function set(req) {
-        server.log("[organiq] SET " + req.property + "=" + req.value);
-        local f = device.properties[req.property][1];
-        local result = f(req.value.tointeger());
-        server.log("  result: " + result);
+        try {
+            server.log("[organiq] SET " + req.property + "=" + req.value);
+            local f = device.properties[req.property][1];
+            f(req.value.tointeger());
+            sendSuccessResponse(req, true);
+        } catch(ex) {
+            sendErrorResponse(req, ex);
+        }
     }
 
     function invoke(req) {
-        server.log("[organiq] INVOKE " + req.property + "(" + req.value + ")");
+        try {
+            server.log("[organiq] INVOKE " + req.property + "(" + req.value + ")");
+            local f = device.methods[req.identifier][0];
+            local res = f(req.value);
+            server.log("  result: " + res);
+            sendSuccessResponse(req, res);
+        } catch(ex) {
+            sendErrorResponse(req, ex);
+        }
     }
 }
 
