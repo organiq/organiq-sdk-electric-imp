@@ -10,25 +10,30 @@ Electric Imp programming is normally done via a web-based IDE that does permit a
     
     `organiq.device.nut` - copy the contents of this file into the `Device` part of the IDE.
     `organiq.agent.nut` - copy the contents of this file into the `Agent` part of the IDE.
-    
+
 ### Quick Peek
 
 Here's a simple Squirrel-language program that exposes an Electric Imp device to Organiq whose `ledState` property is available for read/write access to Organiq applications:
 
 ```Squirrel
-# This is the `Device` code that runs on the Electric Imp device itself
-# include contents of organiq.device.nut, then:
+{ Paste contents of organiq.device.nut here }
 
-led <- hardware.pin9;         # LED connected to pin 9 (with 220Ohm resistor!)
+led <- hardware.pin9;
 led.configure(DIGITAL_OUT);
 
-function getLed() { return led.read(); }            # getter
-function setLed(ledState) { led.write(ledState); }  # setter
+function getLed() { return led.read(); }
+function setLed(ledState) { led.write(ledState); }
+function toggleLed() { led.write(1-led.read()); return led.read(); }
 
-organiq <- Organiq();
-organiq.register("ImpBlinker", {
-    {"ledState": [getLed, setLed]}
-    };
+organiq <- Organiq("ImpBlinker", {
+    properties = {
+        ledState = [getLed, setLed]  // property: [getter, setter]
+    },
+    methods = {
+        toggleLed = toggleLed
+    },
+    events = []
+});
 ```
 
 There is only one line (other than the Organiq SDK code) that needs to be added to your `Agent` code (the left side of the Electric Imp IDE).
@@ -37,13 +42,20 @@ There is only one line (other than the Organiq SDK code) that needs to be added 
 # This is the `Agent` code that runs in the Electric Imp cloud
 # Include contents of organiq.agent.nut, then:
 
-organiq <- Organiq({ apiKeyId="", apiKeySecret="" });
+organiq <- Organiq();
 ```
 
-Here's a Node.js application that starts the Electric Imp LED blinking from anywhere on the web:
+This being done, you can verify that the following URLs work as expected:
+
+    http://api.organiq.io/-/ImpDevice/ledState=0    # Turn LED off
+    http://api.organiq.io/-/ImpDevice/ledState=1    # Turn LED on
+    http://api.organiq.io/-/ImpDevice/ledState      # Get LED state
+    http://api.organiq.io/-/ImpDevice/toggleLed()   # toggle the LED
+
+And here's a Node.js application that starts the Electric Imp LED blinking from anywhere on the web:
 
 ```JavaScript
-var organiq = require('organiq');
+var organiq = require('organiq');   // npm install organiq
 function startBlinking(device) {
     setInterval(function() { device.toggleLed(); }, 500);
 }

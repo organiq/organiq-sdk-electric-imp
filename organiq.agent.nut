@@ -83,9 +83,3 @@ class Organiq {
     }
 }
 
-// function requestHandler(request, response) {
-//     // any requests you want to handle in agent code here...
-// }
-
-// organiq <- Organiq({nextRequestHandler=requestHandler})
-
