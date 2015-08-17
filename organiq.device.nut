@@ -7,7 +7,7 @@ class Organiq {
         agent.on("__organiq_GET", this.get.bindenv(this));
         agent.on("__organiq_SET", this.set.bindenv(this));
         agent.on("__organiq_INVOKE", this.invoke.bindenv(this));
-        #agent.on("__organiq_DESCRIBE", )
+        agent.on("__organiq_DESCRIBE", this.describe.bindevn(this));
         #agent.on("__organiq_CONFIG", )
 
         register(deviceid, device);
@@ -73,6 +73,29 @@ class Organiq {
             server.log("[organiq] INVOKE " + req.identifier + "(" + req.value + ")");
             local f = _device.methods[req.identifier];
             local res = f(req.value);
+            server.log("  result: " + res);
+            sendSuccessResponse(req, res);
+        } catch(ex) {
+            sendErrorResponse(req, ex);
+        }
+    }
+
+    function describe(req) {
+        try {
+            server.log("[organiq] DESCRIBE ");
+            local res = {};
+            res.methods <- {}
+            foreach (method, _ in _device.methods) {
+                res.methods[method] <- { type = "unknown" };
+            }
+            res.properties <- {}
+            foreach (prop, _ in _device.properties) {
+                res.properties[prop] <- { type = "unknown" };
+            }
+            res.events <- {}
+            foreach (event, _ in _device.events) {
+                res.events[event] <- { type = "unknown" };
+            }
             server.log("  result: " + res);
             sendSuccessResponse(req, res);
         } catch(ex) {

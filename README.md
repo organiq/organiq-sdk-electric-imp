@@ -45,14 +45,14 @@ There is only one line (other than the Organiq SDK code) that needs to be added 
 organiq <- Organiq();
 ```
 
-This being done, you can verify that the following URLs work as expected:
+Do a "Build and Run" from within the Electric Imp IDE, and then verify that the following URLs work as expected:
 
     http://api.organiq.io/-/ImpDevice/ledState=0    # Turn LED off
     http://api.organiq.io/-/ImpDevice/ledState=1    # Turn LED on
     http://api.organiq.io/-/ImpDevice/ledState      # Get LED state
     http://api.organiq.io/-/ImpDevice/toggleLed()   # toggle the LED
 
-And here's a Node.js application that starts the Electric Imp LED blinking from anywhere on the web:
+And here's a Node.js application that starts the Electric Imp LED blinking from anywhere on the web. (Note that the toggleLed() method is automatically created on the device object based on the type information provided by the device):
 
 ```JavaScript
 var organiq = require('organiq');   // npm install organiq

@@ -35,7 +35,7 @@ class Organiq {
 
         try {
             local method = request.query.method;
-            local identifier = request.query.identifier;
+            local identifier = ("identifier" in request.query) ? request.query.identifier : null;
             local value = ("value" in request.query) ? request.query.value[0] : null;
 
             server.log("Organiq Request Handler");
@@ -62,14 +62,15 @@ class Organiq {
         local response = context[1];
 
         if (res.success) {
-            response.send(200, res.res);
+            response.send(200, http.jsonencode(res.res));
         } else {
-            response.send(500, res.err);
+            response.send(500, http.jsonencode(res.err));
         }
     }
 
     function register(deviceid) {
         #local myDevId = imp.configparams.deviceid;
+        deviceid = _namespace + ":" + deviceid;
         local callback = http.agenturl() + "/organiq";
         local url = _apiRoot + "!/register?deviceid=" + deviceid + "&callback=" + callback;
         local headers = "";
