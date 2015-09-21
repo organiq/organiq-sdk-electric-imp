@@ -1,22 +1,22 @@
 class Organiq {
 
-    _deviceid = null;
+    _alias = null;
     _device = null;
 
-    constructor(deviceid, device) {
+    constructor(alias, device) {
         agent.on("__organiq_GET", this.get.bindenv(this));
         agent.on("__organiq_SET", this.set.bindenv(this));
         agent.on("__organiq_INVOKE", this.invoke.bindenv(this));
-        agent.on("__organiq_DESCRIBE", this.describe.bindevn(this));
+        agent.on("__organiq_DESCRIBE", this.describe.bindenv(this));
         #agent.on("__organiq_CONFIG", )
 
-        register(deviceid, device);
+        register(alias, device);
     }
 
-    function register(deviceid, device) {
-        _deviceid = deviceid;
+    function register(alias, device) {
+        _alias = alias;
         _device = device;
-        agent.send("__organiq_REGISTER", _deviceid);
+        agent.send("__organiq_REGISTER", _alias);
 
         server.log("Properties: ");
         foreach(index, item in _device.properties) {
@@ -107,22 +107,22 @@ class Organiq {
 
 
 
-// server.log("Device ID: " + hardware.getdeviceid());
-
-// led <- hardware.pin9;
-// led.configure(DIGITAL_OUT);
-
-// function getLed() { return led.read(); }
-// function setLed(ledState) { led.write(ledState); }
-
-
-// organiq <- Organiq("ImpDevice", {
-//     properties = {
-//         "ledState": [getLed, setLed]
-//     },
-//     methods = {
-//         "setLed":setLed,
-//         "getLed":getLed
-//     },
-//     events = ["stateChanged"]
-// });
+//server.log("Device ID: " + hardware.getdeviceid());
+//
+//led <- hardware.pin9;
+//led.configure(DIGITAL_OUT);
+//
+//function getLed() { return led.read(); }
+//function setLed(ledState) { led.write(ledState); }
+//
+//function toggleLed(x) { led.write(1-led.read()); return led.read(); }
+//
+//organiq <- Organiq("ImpBlinker", {
+//    properties = {
+//        ledState = [getLed, setLed]  // property: [getter, setter]
+//    },
+//    methods = {
+//        toggleLed = toggleLed
+//    },
+//    events = []
+//});
