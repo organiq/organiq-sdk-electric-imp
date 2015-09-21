@@ -17,3 +17,4 @@ You can test that the device is available by hitting URLs like:
     http://api.organiq.io/-/ImpDevice/ledState=0 # turn LED off
     http://api.organiq.io/-/ImpDevice/ledState   # get LED state
 
+You can also run the node application `blink.js` to see it interact with the device using the Organiq APIs.

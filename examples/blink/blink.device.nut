@@ -6,7 +6,7 @@
   folder) into this example. The `#require` syntax is not yet supported.
 */
 
-//#require "Organiq.device.nut:0.1.0"   // Not yet supported: See note below
+//#require "Organiq.device.nut:0.1.0"   // Not yet supported: See note above.
 
 { Paste contents of organiq.device.nut here }
 
